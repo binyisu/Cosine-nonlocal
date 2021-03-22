@@ -1,0 +1,29 @@
+def  non_local_block_cosine(inputs):
+    with tf.variable_scope("non_local", reuse=tf.AUTO_REUSE):
+        batch_size, hidden_num = inputs.get_shape().as_list()[0], inputs.get_shape().as_list()[3]
+        # x1 = slim.conv2d(inputs, num_outputs=256, kernel_size=[1, 1], stride=1, padding="SAME", scope='reduce_dim_1')
+        x1 = tf.reshape(inputs, shape=[tf.shape(inputs)[0], -1, tf.shape(inputs)[-1]])
+        # x2 = slim.conv2d(inputs, num_outputs=256, kernel_size=[1, 1], stride=1, padding="SAME", scope='reduce_dim_2')
+        x2 = tf.reshape(inputs, shape=[tf.shape(inputs)[0], -1, tf.shape(inputs)[-1]])
+        x3 = slim.conv2d(inputs, num_outputs=256, kernel_size=[1, 1], stride=1, padding="SAME", scope='reduce_dim_3')
+        x3 = tf.reshape(x3, shape=[tf.shape(inputs)[0], -1, tf.shape(inputs)[-1]])
+        f_map = tf.matmul(x1, x2, transpose_b=True)
+
+        a = tf.sqrt(tf.reduce_sum(tf.square(x1), reduction_indices=[2]))
+        a = tf.reshape(a, [tf.shape(a)[0], tf.shape(a)[1], -1])
+        b = tf.sqrt(tf.reduce_sum(tf.square(x2), reduction_indices=[2]))
+        b = tf.reshape(b, [tf.shape(b)[0], tf.shape(b)[1], -1])
+        c = tf.matmul(a, b, transpose_b=True)
+        d_map = tf.div(f_map, c)  # cosline simility
+
+        # f_map1 = tf.multiply(f_map, d_map)
+        f_map2 = tf.nn.softmax(d_map, axis=-1)
+        f_map3 = tf.matmul(f_map2, x3)
+        f0 = tf.reshape(f_map3, shape=[batch_size, tf.shape(inputs)[1], tf.shape(inputs)[2], hidden_num])
+
+        # d_map1 = tf.nn.softmax(d_map, axis=-1)
+        # d_map2 = tf.matmul(d_map1, x3)
+        # f1 = tf.reshape(d_map2, shape=[batch_size, tf.shape(inputs)[1], tf.shape(inputs)[2], hidden_num])
+
+        f = f0+inputs
+        return f, d_map
