@@ -17,7 +17,7 @@ def  non_local_block_cosine(inputs):
         d_map = tf.div(f_map, c)  # cosline simility
 
         # f_map1 = tf.multiply(f_map, d_map)
-        f_map2 = tf.nn.softmax(d_map, axis=-1)
+        f_map2 = tf.nn.softmax(10*d_map, axis=-1)
         f_map3 = tf.matmul(f_map2, x3)
         f0 = tf.reshape(f_map3, shape=[batch_size, tf.shape(inputs)[1], tf.shape(inputs)[2], hidden_num])
 
